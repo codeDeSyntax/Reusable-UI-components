@@ -1,0 +1,75 @@
+'use client'
+import React, { useState, useEffect } from "react";
+import ReactQuill, { Quill } from "react-quill"; // Ensure you're importing Quill
+import "react-quill/dist/quill.snow.css"; // Import the Quill editor theme
+import "highlight.js/styles/github.css"; // GitHub-style syntax highlighting
+import hljs from "highlight.js";
+import DOMPurify from "dompurify"; // To sanitize the preview
+
+const MarkdownEditor: React.FC = () => {
+  const [value, setValue] = useState<string>("");
+
+  // Quill modules with syntax highlighting
+  const modules = {
+    toolbar: [
+      [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'align': [] }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }], // outdent/indent
+      ['link', 'image', 'blockquote', 'code-block'],
+      ['clean'], // remove formatting
+    ],
+    syntax: {
+      highlight: (text: string) => hljs.highlightAuto(text).value, // Syntax highlighting
+    },
+  };
+
+  // Quill supported formats
+  const formats = [
+    'header', 'font', 'size',
+    'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block',
+    'list', 'bullet', 'indent', 'align',
+    'link', 'image',
+  ];
+
+  // UseEffect to handle syntax highlighting on preview updates
+  useEffect(() => {
+    const blocks = document.querySelectorAll('pre code');
+    blocks.forEach((block) => {
+      hljs.highlightBlock(block as HTMLElement);
+    });
+  }, [value]);
+
+  return (
+    <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 p-4">
+      {/* Editor Area */}
+      <div className="w-full md:w-1/2">
+        <h2 className="text-xl font-bold mb-2">Text Editor</h2>
+        <ReactQuill
+          value={value}
+          onChange={(newValue: string) => {
+            console.log(newValue); // Debugging
+            setValue(newValue);
+          }}
+          modules={modules}
+          formats={formats}
+          theme="snow"
+        />
+      </div>
+
+      {/* Preview Area */}
+      <div className="w-full md:w-1/2">
+        <h2 className="text-xl font-bold mb-2">Preview</h2>
+        <div
+          className="markdown-preview border border-gray-300 p-4 rounded-md h-80 overflow-y-auto"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(value),
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default MarkdownEditor;
